@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <h1>active_status: <span id="is_active"></span></h1>
+    <h1>temperature: <span id="temperature"></span></h1>
+    <textarea rows="10" cols="50">
+Write your C++ code here, and it running on MCU
+You can use ./drivers/driver.hpp file by 
+"include "driver.hpp""
+
+Example 1: 
+int main(){
+    return 2 + 2;
+}
+=> returned value from MCU "4"
+Example 2:
+#include "driver.hpp"
+
+int main(){
+    LED led = { 13, 'C' };
+    
+    led.clock_enable(rcc);
+    led.set_output_mode();
+    led.enable_push_pull();
+    led.set_speed(GpioSpeed::Three);
+    led.no_pull_up_down();
+
+    led.enable_light();
+}
+=> returned value from MCU "None"
+    </textarea>
+    <button onclick="this.send_code">send code</button>
+    <h1>returned value: <span id="returned"></span></h1>
+    <h1>compiler errors: <span id="errors"></span></h1>
+</body>
+    <script src="/index.js"></script>
+</html>
