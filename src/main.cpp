@@ -36,7 +36,7 @@ int main(){
     usart.set_data_bits(DataBits::Eight);
     usart.set_stop_bits(StopBits::One);
     usart.configure_parity(Parity::Even);
-    usart.set_baud_rate(9600 * 2);
+    usart.set_baud_rate(115200);
     
     tx.clock_enable(rcc);
     tx.set_alt_function(7);

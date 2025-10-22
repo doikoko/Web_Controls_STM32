@@ -6,9 +6,10 @@
     <title>Document</title>
 </head>
 <body>
+    <h1>name: <span id="name"></span></h1>
     <h1>active_status: <span id="is_active"></span></h1>
     <h1>temperature: <span id="temperature"></span></h1>
-    <textarea rows="10" cols="50">
+    <textarea id="code" rows="10" cols="50">
 Write your C++ code here, and it running on MCU
 You can use ./drivers/driver.hpp file by 
 "include "driver.hpp""
@@ -34,7 +35,7 @@ int main(){
 }
 => returned value from MCU "None"
     </textarea>
-    <button onclick="this.send_code">send code</button>
+    <button onclick="send_code()">send code</button>
     <h1>returned value: <span id="returned"></span></h1>
     <h1>compiler errors: <span id="errors"></span></h1>
 </body>
