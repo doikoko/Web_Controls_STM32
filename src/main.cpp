@@ -1,6 +1,8 @@
 #include "../drivers/driver.hpp"
 
-
+enum Commands{
+    SendData, RecieveCode
+};
 [[noreturn]]
 int main(){
     RCC rcc;
@@ -10,9 +12,7 @@ int main(){
 // Button - part of my development board
     Button button = { 0, 'A' };
     Systick systick;
-    USART usart;
-    TX tx = { usart.usart_registers, 9, 'A' };
-    RX rx = { usart.usart_registers, 10, 'A' };
+    USART usart = { 9, 'A', 10, 'A' };
 
 // init led
     led.clock_enable(rcc);
@@ -28,35 +28,38 @@ int main(){
     
     tim2.clock_enable(rcc);
     rcc.config_pll(7, 4, 336, 16);
-    led.disable_light();
     
+    usart.clear_data_reg();
     usart.clock_enable(rcc);
+    
+    usart.tx.set_alt_function_mode();
+    usart.rx.set_alt_function_mode();
+
+    usart.tx.clock_enable(rcc);
+    usart.rx.clock_enable(rcc);
+
+    usart.tx.set_alt_function(7);
+    usart.rx.set_alt_function(7);
+
+    usart.tx.enable_push_pull();
+    usart.rx.enable_push_pull();
+    usart.tx.no_pull_up_down();
+    usart.rx.no_pull_up_down();
+    usart.tx.set_speed(GpioSpeed::Three);
+    usart.rx.set_speed(GpioSpeed::Three);
+
     usart.disable_usart();
-    usart.usart_registers->cr1 = 0;
     usart.set_data_bits(DataBits::Eight);
     usart.set_stop_bits(StopBits::One);
-    usart.configure_parity(Parity::Even);
-    usart.set_baud_rate(115200);
-    
-    tx.clock_enable(rcc);
-    tx.set_alt_function(7);
-    
-    rx.clock_enable(rcc);
-    rx.set_alt_function(7);
-    
-    usart.enable_usart();
-    
-    rx.enable_open_drain();
-    tx.enable_open_drain();
-    
-    rx.enable_push_pull();
-    tx.enable_push_pull();
+    usart.configure_parity(Parity::None);
+    usart.set_baud_rate(9600);
 
-    tx.enable();
-    rx.enable();
+    usart.tx_enable(); 
+    usart.rx_enable(); 
+    usart.enable_usart(); 
     
-    while(rx.is_empty());
-    led.enable_light();
-
-    while(true){}
+    led.disable_light();
+    while(true){
+        
+    }
 }

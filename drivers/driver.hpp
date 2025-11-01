@@ -111,8 +111,7 @@ typedef struct {
     volatile uint32_t cir;
     volatile uint32_t ahb1rstr;
     volatile uint32_t ahb2rstr;
-    volatile uint32_t ahb3rstr;
-    volatile uint32_t reserved0;
+    volatile uint32_t reserved0[2];
     volatile uint32_t apb1rstr;
     volatile uint32_t apb2rstr;
     volatile uint32_t reserved1[2];
@@ -219,6 +218,7 @@ protected:
 public:    
     GPIO_Reg* registers;
 
+    GPIO(){};
     GPIO(uint8_t num, uint8_t letter) : 
         registers(reinterpret_cast<GPIO_Reg*>(
             GPIO_BASE + (0x400 * (letter - 'A'))
@@ -232,7 +232,8 @@ public:
             rcc.registers->ahb1enr |= 1 << (letter - 'A');
         else if (letter == 'H')    
             rcc.registers->ahb1enr |= 1 << 7;
-    }        
+    }    
+        
     void set_input_mode(){
         registers->moder &= ~(0x3 << (2 * num));
     }    
@@ -241,6 +242,11 @@ public:
         registers->moder &= ~(0x3 << (2 * num));
         registers->moder |= 1 << (2 * num);
     }    
+
+    void set_alt_function_mode(){
+        registers->moder &= ~(0x3 << (2 * num));
+        registers->moder |= 0b10 << (2 * num);
+    }
 
     void enable_push_pull(){
         registers->otyper &= ~(1 << num);
@@ -276,7 +282,7 @@ public:
     void set_alt_function(uint8_t function_num){
         if (function_num > 15) return;
         if (num < 8) registers->afrl |= function_num << (num * 4);
-        else if (num < 16) registers->afrh |= function_num << (num * 4);
+        else if (num < 16) registers->afrh |= function_num << ((num - 8) * 4);
     }
 };    
 
@@ -491,7 +497,7 @@ public:
 
 enum class DataBits{ Eight, Nine };
 enum class WakeTrigger{ Idle, Address_Mask };
-enum class Parity{ Even, Odd };
+enum class Parity{ None, Even, Odd };
 enum class StopBits{ Half, One, OneAndHalf, Two };
 typedef struct {
     volatile uint32_t sr;
@@ -505,9 +511,100 @@ typedef struct {
 
 class USART final{
 public:
+    GPIO tx, rx;
     USART_Reg* usart_registers;
 
-    USART() : usart_registers(reinterpret_cast<USART_Reg*>(USART1_BASE)){}
+    USART(uint8_t tx_num, char tx_letter, uint8_t rx_num, char rx_letter){
+        usart_registers = reinterpret_cast<USART_Reg*>(USART1_BASE);
+        tx = GPIO(tx_num, tx_letter);
+        rx = GPIO(rx_num, rx_letter);
+    }
+
+    bool is_tx_empty() const {
+        return (usart_registers->sr >> 7) & 1;
+    }
+
+    void sync(){
+        clear_data_reg();
+        while(!is_rx_empty());
+        while (usart_registers->dr != 0xFF);
+        usart_registers->dr = -1;
+        while(!is_transmition_complete());
+    }
+    
+    void sync_write_buf(void* buf, uint8_t len){
+        sync();
+        
+        for(int i = 0; i < len; i++){
+            while (!is_tx_empty());
+            usart_registers->dr = reinterpret_cast<uint8_t*>(buf)[i];
+            while (!is_transmition_complete());
+        }
+        usart_registers->dr = '\0';
+        while(!is_transmition_complete());
+    }
+
+    void tx_enable(){
+        usart_registers->cr1 |= 1 << 3;
+    }
+    
+    void tx_disable(){
+        usart_registers->cr1 &= ~(1 << 3);
+    }
+
+    bool is_rx_empty() const {
+        return (usart_registers->sr >> 5) & 1;
+    }
+
+    void sync_read_buf(uint8_t* buf, uint8_t max){
+        sync();
+        
+        for(uint8_t count = 0; buf[count] != '\0' && count < max; count++){
+            while(!is_rx_empty());
+            buf[count] = usart_registers->dr;
+            while (!is_transmition_complete());
+        }
+    }
+    
+    void rx_enable(){
+        usart_registers->cr1 |= 1 << 2;
+    }
+    
+    void rx_disable(){
+        usart_registers->cr1 &= ~(1 << 2);
+    }
+
+    void sleep(){
+        usart_registers->cr1 |= 1 << 1;
+    }
+
+    void wake(){
+        usart_registers->cr1 &= ~(1 << 1);
+    }
+
+    void rx_enable_dma(){
+        usart_registers->cr3 |= 1 << 6;
+    }
+
+    void rx_disable_dma(){
+        usart_registers->cr3 &= ~(1 << 6);
+    }
+    
+    void set_break(){
+        usart_registers->cr1 |= 1;
+    }
+
+    void tx_enable_dma(){
+        usart_registers->cr3 |= 1 << 7;
+    }
+
+    void tx_disable_dma(){
+        usart_registers->cr3 &= ~(1 << 7);
+    }
+
+    void clear_data_reg(){
+        usart_registers->dr = 0;
+    }
 
     void clock_enable(RCC& rcc){
         rcc.registers->apb2enr |= 1 << 4;
@@ -528,12 +625,11 @@ public:
     void set_baud_rate(float bauds){
         usart_registers->cr1 &= ~(1 << 15);
 
-
         float div = 84000000.0 / bauds;
         uint16_t mantissa = div;
         uint32_t fraction = (div - mantissa) * 16 + 0.5;
         
-        if (fraction >= 16) {
+        if (fraction >= 0xF) {
             mantissa += 1;
             fraction = 0;
         }
@@ -569,20 +665,17 @@ public:
         }
     }
 
-    void parity_control_enable(){
-        usart_registers->cr1 |= 1 << 10;
-    }
-    
-    void parity_control_disable(){
-        usart_registers->cr1 &= ~(1 << 10);
-    }
-
     void configure_parity(Parity parity){
         switch (parity) {
+        case Parity::None:
+            usart_registers->cr1 &= ~(1 << 10);   
+            return;     
         case Parity::Even:
+            usart_registers->cr1 |= 1 << 10;
             usart_registers->cr1 &= ~(1 << 9);
             return;
         case Parity::Odd:
+            usart_registers->cr1 |= 1 << 10;
             usart_registers->cr1 |= 1 << 9;
         }
     }
@@ -658,91 +751,5 @@ public:
 
     void smatcard_disable(){
         usart_registers->cr3 &= ~(1 << 5);
-    }
-};
-
-class TX final : public GPIO{
-    uint8_t num;
-    uint8_t letter;
-public:
-    USART_Reg* usart_registers;
-
-    TX(USART_Reg* usart_registers, uint8_t num, uint8_t letter) : GPIO(num, letter){
-        this->num = num;
-        this->letter = letter;
-        this->usart_registers = usart_registers;
-    }
-
-    bool is_empty() const {
-        return !((usart_registers->sr >> 7) & 1);
-    }
-
-    void write(uint8_t data){
-        usart_registers->dr = data;
-    }
-
-    void enable(){
-        usart_registers->cr1 |= 1 << 3;
-    }
-    
-    void disable(){
-        usart_registers->cr1 &= ~(1 << 3);
-    }
-
-    void set_break(){
-        usart_registers->cr1 |= 1;
-    }
-
-    void enable_dma(){
-        usart_registers->cr3 |= 1 << 7;
-    }
-
-    void disable_dma(){
-        usart_registers->cr3 &= ~(1 << 7);
-    }
-};
-
-class RX final : public GPIO{
-    uint8_t num;
-    uint8_t letter;
-public:
-    USART_Reg* usart_registers;
-    
-    RX(USART_Reg* usart_registers, uint8_t num, uint8_t letter) : GPIO(num, letter){
-        this->num = num;
-        this->letter = letter;
-        this->usart_registers = usart_registers;
-    }
-    
-    bool is_empty() const {
-        return !((usart_registers->sr >> 5) & 1);
-    }
-
-    uint8_t read() const {
-        return usart_registers->dr;
-    }
-
-    void enable(){
-        usart_registers->cr1 |= 1 << 2;
-    }
-    
-    void disable(){
-        usart_registers->cr1 &= ~(1 << 2);
-    }
-
-    void sleep(){
-        usart_registers->cr1 |= 1 << 1;
-    }
-
-    void wake(){
-        usart_registers->cr1 &= ~(1 << 1);
-    }
-
-    void enable_dma(){
-        usart_registers->cr3 |= 1 << 6;
-    }
-
-    void disable_dma(){
-        usart_registers->cr3 &= ~(1 << 6);
     }
 };
