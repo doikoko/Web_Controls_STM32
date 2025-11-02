@@ -29,7 +29,6 @@ async function get_mcu_status(){
 
 async function send_code() {
     const code_data = document.getElementById("code").value;
-    console.log(code_data);
     const code = {
         "code": code_data
     };
@@ -43,5 +42,5 @@ async function send_code() {
         }
     )
 }
-get_mcu_status();
+
 setInterval(get_mcu_status, 1000);

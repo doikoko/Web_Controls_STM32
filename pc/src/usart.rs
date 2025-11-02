@@ -21,7 +21,7 @@ impl USART{
         }
     }
 
-    pub async fn connect(self: Arc<Self>){      
+    pub async fn connect(&self){      
         let mcu_data = self.mcu_data.clone();
         
         let mut port = None;
@@ -57,7 +57,7 @@ impl USART{
         *self.rx.write().await = None;
     }
 
-    pub async fn sync(self: Arc<Self>){
+    pub async fn sync(&self){
         let mut temp = [0u8; 1];
 
         while temp[0] != 0xFF{
@@ -77,14 +77,16 @@ impl USART{
             tokio::time::sleep(Duration::from_secs(1)).await;
         }
     }
-    pub async fn sync_write(self: Arc<Self>, data: &Vec<u8>){
+
+    pub async fn sync_write(&self, data: &Vec<u8>){
         self.clone().sync().await;
 
         for el in data.iter(){
             self.tx.write().await.as_mut().unwrap().write_u8(*el).await.unwrap();
         }
     }
-    pub async fn sync_read(self: Arc<Self>) -> Vec<u8> {
+
+    pub async fn sync_read(&self) -> Vec<u8> {
         let mut buf = Vec::new();
         let mut temp = [1u8; 1];
         
@@ -98,9 +100,12 @@ impl USART{
         
         buf
     }
-    pub async fn send_code(self: Arc<Self>, code: Arc<Code>){
-        //code.compile();
-        //self.tx.write().await.write_all(&*code.compiled.unwrap().as_slice());
+
+    pub async fn send_code(&self, code: &mut Code){
+        if let Ok(()) = code.compile().await{
+            println!("sending data to MCU");
+            //self.tx.write().await.write_all(&*code.compiled.unwrap().as_slice());
+        } 
     }
 }
 
