@@ -102,10 +102,10 @@ impl USART{
     }
 
     pub async fn send_code(&self, code: &mut Code){
-        if let Ok(()) = code.compile().await{
+        //if code.compile().await{
             println!("sending data to MCU");
             //self.tx.write().await.write_all(&*code.compiled.unwrap().as_slice());
-        } 
+        //} 
     }
 }
 

@@ -22,18 +22,20 @@ async function get_mcu_status(){
         temperature.style.color = "red";
     }
 
-    name.innerHTML = `${data.name}`;
-    is_active.innerHTML = `${data.is_active}`;
-    temperature.innerHTML = `${data.temperature}`;
+    name.innerHTML = data.name;
+    is_active.innerHTML = data.is_active;
+    temperature.innerHTML = data.temperature;
 };
 
 async function send_code() {
     const code_data = document.getElementById("code").value;
+    const compiler_errors = document.getElementById("errors").value;
+    
     const code = {
         "code": code_data
     };
 
-    await fetch("data", {
+    const response = await fetch("data", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json"
@@ -41,6 +43,9 @@ async function send_code() {
             body: JSON.stringify(code),
         }
     )
+
+    const result = response.json();
+    compiler_errors.innerHTML = compiler_errors;
 }
 
 setInterval(get_mcu_status, 1000);

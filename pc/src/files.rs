@@ -9,6 +9,7 @@ pub static FILES: LazyLock<HashMap<&str, PathBuf>> = LazyLock::new(|| {
     let user_ld     = assets_dir.join("user.ld");
     let user_o      = assets_dir.join("user.o");
     let user_elf    = assets_dir.join("user.elf");
+    let user_bin    = assets_dir.join("user.bin");
 
     let files = HashMap::from([
         ("manifest_dir", manifest_dir),
@@ -17,7 +18,8 @@ pub static FILES: LazyLock<HashMap<&str, PathBuf>> = LazyLock::new(|| {
         ("index.html", index_html),
         ("user.ld", user_ld),
         ("user.o", user_o),
-        ("user.elf", user_elf)
+        ("user.elf", user_elf),
+        ("user.bin", user_bin)
     ]);
 
     files

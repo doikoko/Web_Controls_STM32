@@ -17,12 +17,12 @@ SECTIONS {
     }
 
     . = 0xf81;
-    .data : {
+    .bss : {
         *(.bss*)
         *(COMMON)
     }
 
     /DISCARD/ : {
-        *(.comment)
+        *
     }
 }

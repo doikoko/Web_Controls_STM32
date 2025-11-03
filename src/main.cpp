@@ -1,8 +1,18 @@
-#include "../drivers/driver.hpp"
+#include "../drivers/rcc.hpp"
+#include "../drivers/tim.hpp"
+#include "../drivers/dev_board_periphy.hpp"
+#include "../drivers/systick.hpp"
+#include "../drivers/usart.hpp"
 
-enum Commands{
-    SendData, RecieveCode
-};
+uint32_t get_returned_data(){
+    uint32_t data = 0;
+    //asm(
+    //    "mov %%r0, %0\n\t"
+    //    :
+    //    : ("r")data
+    //)
+    //return data;
+}
 [[noreturn]]
 int main(){
     RCC rcc;
