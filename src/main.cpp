@@ -3,16 +3,8 @@
 #include "../drivers/dev_board_periphy.hpp"
 #include "../drivers/systick.hpp"
 #include "../drivers/usart.hpp"
+#include "../drivers/user.hpp"
 
-uint32_t get_returned_data(){
-    uint32_t data = 0;
-    //asm(
-    //    "mov %%r0, %0\n\t"
-    //    :
-    //    : ("r")data
-    //)
-    //return data;
-}
 [[noreturn]]
 int main(){
     RCC rcc;
@@ -23,6 +15,7 @@ int main(){
     Button button = { 0, 'A' };
     Systick systick;
     USART usart = { 9, 'A', 10, 'A' };
+    User user;
 
 // init led
     led.clock_enable(rcc);
@@ -67,9 +60,14 @@ int main(){
     usart.tx_enable(); 
     usart.rx_enable(); 
     usart.enable_usart(); 
-    
+
     led.disable_light();
+
     while(true){
-        
+        user.recv_code(usart);
+        led.enable_light();
+        user.call();
+        usart.sync();
+        user.send_returned_value(usart);
     }
 }

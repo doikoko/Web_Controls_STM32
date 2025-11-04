@@ -64,10 +64,10 @@ public:
         return (usart_registers->sr >> 5) & 1;
     }
 
-    void sync_read_buf(uint8_t* buf, uint8_t max){
+    void sync_read_buf(uint8_t* buf, uint16_t max){
         sync();
         
-        for(uint8_t count = 0; buf[count] != '\0' && count < max; count++){
+        for(uint16_t count = 0; buf[count] != '\0' && count < max; count++){
             while(!is_rx_empty());
             buf[count] = usart_registers->dr;
             while (!is_transmition_complete());

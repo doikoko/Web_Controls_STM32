@@ -1,26 +1,26 @@
-use std::io::{BufRead, Error, ErrorKind};
+use std::io::BufRead;
 use serde::{Deserialize, Serialize};
 use tokio::{io::AsyncWriteExt, process::Command};
 
-use crate::files::FILES;
+use crate::files::{DRIVERS, FILES};
 
 #[derive(Serialize, Clone)]
 pub struct Errors{
     pub is_success: bool,
-    data: String
+    data: String,
+    pub returned_value: u32
 }
 impl Errors{
     pub fn new() -> Self{
         Self{
             is_success: false,
-            data: String::new()
+            data: String::new(),
+            returned_value: 0
         }
     }
     
     fn push_err(&mut self, error: String){
-        if self.is_success{
-            self.is_success = false;
-        }
+        self.is_success = false;
 
         if !error.is_empty(){
             self.data = format!("{}\n{}", self.data, error);
@@ -66,11 +66,20 @@ impl Code{
     }
 
     pub async fn compile(&mut self) -> Errors{
+        DRIVERS
+            .clone()
+            .iter()
+            .for_each(|(key, value)| {
+                self.code = self.code
+                    .replace(
+                        format!("#include \"{}\"", key).as_str(),
+                        format!("#include \"{}\"", value.display()).as_str()
+                    );
+            });
         self.code = self.code.replace("\"driver.hpp\"", "\"drivers/driver.hpp\"")
             .replace("#include \"drivers/code.hpp\"", "\0");
 
         let mut errors = Errors::new();
-
         let mut child = Command::new("arm-none-eabi-g++")
             .arg("-x")
             .arg("c++")
@@ -78,6 +87,8 @@ impl Code{
             .arg("-o")
             .arg(FILES["user.o"].clone())
             .arg("-mthumb")
+            .arg("-fno-rtti")
+            .arg("-fno-exceptions")
             .arg("-O3")
             .arg("-mcpu=cortex-m4")
             .arg("-Wall")

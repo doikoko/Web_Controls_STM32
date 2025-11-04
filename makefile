@@ -6,6 +6,7 @@ DRIVERS = ./drivers
 COMPILE_FLAGS = -mcpu=cortex-m4 \
 	-mthumb -O2 -ffunction-sections \
 	-fdata-sections \
+	-fno-exceptions -fno-rtti \
     -Wall -Wextra -mfloat-abi=hard -mfpu=fpv4-sp-d16 
 LINK_FLAGS = -T mem.ld
 
@@ -35,6 +36,6 @@ test_pc:
 	
 	sudo ./pc.elf
 clean:
-	rm -rf blink.bin blink.elf out_dir ./pc.elf
+	rm -rf blink.bin blink.elf out_dir ./pc.elf ./pc/assets/user.bin ./pc/assets/user.o ./pc/assets/user.elf
 c_flash:
 	dfu-util -a 0 -e

@@ -1,11 +1,11 @@
 use std::sync::Arc;
 use tokio::{task::JoinHandle, sync::RwLock};
-use warp::reply::{Json, json};
+use warp::reply::json;
 use warp::{path, reply::html, serve, Filter};
 
 use crate::data::Errors;
 use crate::usart::USART;
-use crate::{ArcRw, Code, MCUData, usart};
+use crate::{ArcRw, Code, MCUData};
 use crate::files::FILES;
 
 
@@ -61,20 +61,25 @@ impl Server{
                 let server = server.clone();
                 let usart = usart.clone();
 
-                move |mut code: Code| {
+                move |code: Code| {
                     let server = server.clone();
                     let usart = usart.clone();
                     
                     async move {
+                        *server.user_code.write().await = code.clone();
+
                         let errors = Arc::new(RwLock::new(Errors::new()));
                         *errors.write().await = server.user_code.write().await.compile().await;
                         *server.code_errors.write().await = errors.read().await.clone();
                         
                         if errors.read().await.is_success{
-                            server.handlers.clone().write().await.push(tokio::spawn(async move {
-                                let usart = usart.clone();
-                                usart.send_code(&mut code).await;
-                            }));
+                            let usart = usart.clone();
+                            let errors = errors.clone();
+
+                            errors.write().await.returned_value = match usart.send_code().await{
+                                Ok(val) => val,
+                                Err(_) => 0
+                            };
                         }
 
                         Ok::<_, warp::Rejection>(json(&*errors.read().await))
@@ -82,10 +87,6 @@ impl Server{
                }
             }).boxed();
         
-        //let send_comp_status = path("comp")     
-            //.and_then({
-//
-            //})
         let routers = rout
             .or(data_send)
             .or(data_get)

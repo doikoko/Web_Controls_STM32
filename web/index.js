@@ -29,7 +29,8 @@ async function get_mcu_status(){
 
 async function send_code() {
     const code_data = document.getElementById("code").value;
-    const compiler_errors = document.getElementById("errors").value;
+    const compiler_errors = document.getElementById("errors");
+    const returned_value = document.getElementById("returned");
     
     const code = {
         "code": code_data
@@ -44,8 +45,9 @@ async function send_code() {
         }
     )
 
-    const result = response.json();
-    compiler_errors.innerHTML = compiler_errors;
+    const resp = await response.json();
+    compiler_errors.innerHTML = resp.data;
+    returned_value.innerHTML = resp.returned_value;
 }
 
 setInterval(get_mcu_status, 1000);

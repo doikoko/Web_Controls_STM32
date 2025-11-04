@@ -20,7 +20,7 @@ async fn main() -> std::io::Result<()>{
     let mcu_data = Arc::new(RwLock::new(MCUData::new()));
     let user_code = Arc::new(RwLock::new(Code::new()));
 
-    let usart = Arc::new(USART::new(mcu_data.clone(), user_code.clone()));
+    let usart = Arc::new(USART::new(mcu_data.clone()));
     let server = Arc::new(Server::new(mcu_data.clone(), user_code.clone()));
 
     let usart_watchdog_handler = tokio::spawn({

@@ -1,5 +1,7 @@
 #pragma once
 
+#define KILOBYTE 1024
+
 #define RCC_BASE        0x40023800
 #define GPIO_BASE       0x40020000
 #define TIM_BASE        0x40000000
