@@ -65,12 +65,12 @@ impl USART {
     pub async fn sync(&self) {
         let mut temp = [0u8; 1];
 
-        while temp[0] != 0xFF {
+        while temp[0] != 0xFE {
             self.tx.write().await.as_mut().unwrap().write_u8(0xFF).await.unwrap();
             self.rx.write().await.as_mut().unwrap().read(&mut temp).await.unwrap();
         }
     }
-
+    
     pub async fn disconnect_watchdog(self: Arc<Self>) {
         let usart = self.clone();
         let mcu_data = usart.mcu_data.clone();
@@ -85,39 +85,32 @@ impl USART {
     }
 
     pub async fn sync_write(&self, data: &Vec<u8>) {
-        self.clone().sync().await;
-
+        let data_len = data.len() as u32;
+        
+        self.sync().await;
+        for i in 0..4{
+            self.tx.write().await.as_mut().unwrap().write_u8((data_len >> (8 * i)) as u8).await.unwrap();
+        }
         for el in data.iter() {
-            self.tx
-                .write()
-                .await
-                .as_mut()
-                .unwrap()
-                .write_u8(*el)
-                .await
-                .unwrap();
+            self.tx.write().await.as_mut().unwrap().write_u8(*el).await.unwrap();
         }
     }
 
     pub async fn sync_read(&self) -> Vec<u8> {
         let mut buf = Vec::new();
-        let mut temp = [1u8; 1];
+        let mut data_len = 0u32;
 
-        self.clone().sync().await;
-
-        while temp[0] != b'\0' {
-            temp = [0u8; 1];
-            self.rx
-                .write()
-                .await
-                .as_mut()
-                .unwrap()
-                .read(&mut temp)
-                .await
-                .unwrap();
-            buf.push(temp[0]);
+        self.sync().await;
+        
+        for i in 0..4{
+            data_len |= u32::from(self.rx.write().await.as_mut().unwrap().read_u8().await.unwrap()) << (8 * i);
         }
-
+       
+        buf.resize(data_len as usize, 0);
+        for i in 0..data_len {
+            buf[i as usize] = self.rx.write().await.as_mut().unwrap().read_u8().await.unwrap();
+        }
+    
         buf
     }
 
@@ -131,8 +124,8 @@ impl USART {
             Err(Error::from(ErrorKind::OutOfMemory))
         } else {
             println!("sending code to MCU");
+
             self.sync_write(&buf).await;
-            self.sync().await;
             Ok(
                 self.sync_read().await[0]as u32,
             )

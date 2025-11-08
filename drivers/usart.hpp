@@ -34,22 +34,28 @@ public:
 
     void sync(){
         clear_data_reg();
-        while(!is_rx_empty());
-        while (usart_registers->dr != 0xFF);
-        usart_registers->dr = -1;
+        
+        do {
+            while(is_rx_empty());
+        } while (usart_registers->dr != 0xFF);
+        usart_registers->dr = 0xFE;
         while(!is_transmition_complete());
+        clear_data_reg();
     }
-    
-    void sync_write_buf(void* buf, uint8_t len){
+
+    void sync_write_buf(void* buf, uint32_t len){
         sync();
         
-        for(int i = 0; i < len; i++){
+        for(uint8_t i = 0; i < 4; i++){
+            while(!is_tx_empty());
+            usart_registers->dr = len >> (8 * i);
+            while (!is_transmition_complete());
+        }
+        for(uint32_t i = 0; i < len; i++){
             while (!is_tx_empty());
             usart_registers->dr = reinterpret_cast<uint8_t*>(buf)[i];
             while (!is_transmition_complete());
         }
-        usart_registers->dr = '\0';
-        while(!is_transmition_complete());
     }
 
     void tx_enable(){
@@ -61,17 +67,21 @@ public:
     }
 
     bool is_rx_empty() const {
-        return (usart_registers->sr >> 5) & 1;
+        return !((usart_registers->sr >> 5) & 1);
     }
 
-    void sync_read_buf(uint8_t* buf, uint16_t max){
+    uint32_t sync_read_buf(void* buf){
+        uint32_t data_len = 0;
         sync();
-        
-        for(uint16_t count = 0; buf[count] != '\0' && count < max; count++){
-            while(!is_rx_empty());
-            buf[count] = usart_registers->dr;
-            while (!is_transmition_complete());
+        for(uint8_t i = 0; i < 4; i++){
+            while(is_rx_empty());
+            data_len |= usart_registers->dr << (8 * i);
         }
+        for(uint16_t count = 0; count < data_len; count++){
+            while(is_rx_empty());
+            reinterpret_cast<uint8_t*>(buf)[count] = usart_registers->dr;
+        }
+        return data_len;
     }
     
     void rx_enable(){
@@ -111,7 +121,8 @@ public:
     }
 
     void clear_data_reg(){
-        usart_registers->dr = 0;
+        volatile uint32_t temp = usart_registers->dr;
+        (void)temp;
     }
 
     void clock_enable(RCC& rcc){

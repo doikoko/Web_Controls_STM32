@@ -32,14 +32,14 @@ async fn main() -> std::io::Result<()>{
                 
                 loop{
                     let usart = usart.clone();
-                    if !mcu_data.clone().read().await.is_active{
+                    if !mcu_data.clone().read().await.is_active && is_active{
                         if is_active {
                             println!("serial port {} is disconnected", mcu_data.read().await.name);
                             usart.clear_struct().await;
                         }
                         is_active = false;
                     }
-                    else if mcu_data.read().await.is_active{
+                    else if mcu_data.read().await.is_active && !is_active{
                         if !is_active{
                             usart.connect().await;
                         }

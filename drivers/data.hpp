@@ -11,6 +11,7 @@
 #define ICTR_BASE       0xE000E004
 #define STIR_BASE       0xE000EF00
 #define USART1_BASE     0x40011000
+#define MPU_BASE        0xE000ED90
 
 typedef unsigned char uint8_t;
 typedef unsigned short uint16_t;

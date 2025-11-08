@@ -3,7 +3,6 @@ use tokio::{task::JoinHandle, sync::RwLock};
 use warp::reply::json;
 use warp::{path, reply::html, serve, Filter};
 
-use crate::data::Errors;
 use crate::usart::USART;
 use crate::{ArcRw, Code, MCUData};
 use crate::files::FILES;
@@ -12,7 +11,6 @@ use crate::files::FILES;
 pub struct Server{
     mcu_data: ArcRw<MCUData>,
     user_code: ArcRw<Code>,
-    code_errors: ArcRw<Errors>,
     html_data: ArcRw<String>,
     handlers: ArcRw<Vec<JoinHandle<()>>>
 }
@@ -23,7 +21,6 @@ impl Server{
         Self {
             mcu_data:   mcu_data, 
             user_code:  user_code,
-            code_errors: Arc::new(RwLock::new(Errors::new())),
             html_data:   Arc::new(RwLock::new(html_data)),
             handlers:    Arc::new(RwLock::new(Vec::new()))
         }       
@@ -68,21 +65,16 @@ impl Server{
                     async move {
                         *server.user_code.write().await = code.clone();
 
-                        let errors = Arc::new(RwLock::new(Errors::new()));
-                        *errors.write().await = server.user_code.write().await.compile().await;
-                        *server.code_errors.write().await = errors.read().await.clone();
+                        let mut errors = server.user_code.write().await.compile().await;
                         
-                        if errors.read().await.is_success{
-                            let usart = usart.clone();
-                            let errors = errors.clone();
-
-                            errors.write().await.returned_value = match usart.send_code().await{
+                        if errors.is_success{
+                            errors.returned_value = match usart.send_code().await{
                                 Ok(val) => val,
                                 Err(_) => 0
                             };
                         }
 
-                        Ok::<_, warp::Rejection>(json(&*errors.read().await))
+                        Ok::<_, warp::Rejection>(json(&errors))
                     }
                }
             }).boxed();

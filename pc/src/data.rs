@@ -88,6 +88,8 @@ impl Code{
             .arg(FILES["user.o"].clone())
             .arg("-mthumb")
             .arg("-fno-rtti")
+            .arg("-nostdlib")
+            .arg("-nostartfiles")
             .arg("-fno-exceptions")
             .arg("-O3")
             .arg("-mcpu=cortex-m4")

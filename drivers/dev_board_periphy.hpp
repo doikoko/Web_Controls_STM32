@@ -7,15 +7,15 @@ public:
     LED(uint8_t num, uint8_t letter) : GPIO(num, letter){}
     
     void enable_light(){
-        registers->odr &= ~(1 << 13);
+        registers->odr &= ~(1 << num);
     }    
 
     void disable_light(){
-        registers->odr |= 1 << 13;
+        registers->odr |= 1 << num;
     }    
 
     void blink(){
-        registers->odr ^= 1 << 13;
+        registers->odr ^= 1 << num;
     }    
 };    
 

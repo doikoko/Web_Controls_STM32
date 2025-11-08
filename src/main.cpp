@@ -5,6 +5,8 @@
 #include "../drivers/usart.hpp"
 #include "../drivers/user.hpp"
 
+uint8_t code[KILOBYTE * 8] __attribute__((section(".user_code")));
+
 [[noreturn]]
 int main(){
     RCC rcc;
@@ -12,11 +14,10 @@ int main(){
 // Led - part of my development board
     LED led = { 13, 'C' };
 // Button - part of my development board
-    Button button = { 0, 'A' };
     Systick systick;
-    USART usart = { 9, 'A', 10, 'A' };
-    User user;
-
+    Button button = { 0, 'A' };
+    USART usart = {9, 'A', 10, 'A' };
+    User user(code);
 // init led
     led.clock_enable(rcc);
     led.set_output_mode();
@@ -29,8 +30,8 @@ int main(){
     button.set_speed(GpioSpeed::Three);
     button.set_pull_up();
     
-    tim2.clock_enable(rcc);
     rcc.config_pll(7, 4, 336, 16);
+    tim2.clock_enable(rcc);
     
     usart.clear_data_reg();
     usart.clock_enable(rcc);
@@ -60,14 +61,12 @@ int main(){
     usart.tx_enable(); 
     usart.rx_enable(); 
     usart.enable_usart(); 
-
+    
     led.disable_light();
 
     while(true){
         user.recv_code(usart);
-        led.enable_light();
         user.call();
-        usart.sync();
         user.send_returned_value(usart);
     }
 }

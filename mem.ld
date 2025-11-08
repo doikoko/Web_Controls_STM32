@@ -30,4 +30,9 @@ SECTIONS{
         . = ALIGN(4);
         _ebss = .;
     } > SRAM
+    
+    . = ALIGN(8192);
+    .user_code : {
+        *(.user_code)
+    } > SRAM
 }

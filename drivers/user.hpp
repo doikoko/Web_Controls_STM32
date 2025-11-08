@@ -2,31 +2,50 @@
 
 #include "data.hpp"
 #include "usart.hpp"
+#include "mpu.hpp"
 
 class User{
     typedef uint32_t(*user_func)();  
-    uint8_t code[KILOBYTE * 8];
+    user_func func;
+    uint8_t *code;
     uint32_t returned_value;
 
     void clear(){
         volatile uint32_t *copy = (uint32_t*)code;
-        for(int i = 0; i < KILOBYTE * 2; i++){
+        for(uint16_t i = 0; i < KILOBYTE * 2; i++){
             copy[i] = 0;
         }
     }
 public:
-    User() {
+    User(uint8_t *code) {
+        this->code = code;
+        func = reinterpret_cast<user_func>(reinterpret_cast<uint32_t>(code) | 1);
+
+        MPU mpu;
+
+        mpu.disable();
+        asm volatile("dsb");
+        asm volatile("isb");
+        mpu.create_region(reinterpret_cast<uint32_t>(code), 3, 13);
+        mpu.is_executed(true);
+        mpu.set_permitions(Permitions::FullAccess);
+        mpu.disable_interrupts();
+        mpu.disable_cache();
+        mpu.enable_access();
+        mpu.enable_region();
+        asm volatile("dsb");
+        asm volatile("isb");
+        mpu.enable();
+
         clear();
     }
 
     void recv_code(USART& usart){
         clear();
-        usart.clear_data_reg();
-        usart.sync_read_buf(code, KILOBYTE * 8);
+        usart.sync_read_buf(code);
     }
 
     void call(){
-        user_func func = reinterpret_cast<user_func>(code);
         returned_value = func();
     }
 
