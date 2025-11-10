@@ -3,7 +3,12 @@
 #include "data.hpp"
 
 
-enum class ProgramSize{ Eight, Sixteen, ThirtyTwo, SixtyFour };
+enum class ProgramSize: uint8_t{ 
+    Eight       = 0b0,
+    Sixteen     = 0b01,
+    ThirtyTwo   = 0b10,
+    SixtyFour   = 0b11
+};
 typedef struct {
     volatile uint32_t acr;
     volatile uint32_t keyr;
@@ -53,13 +58,7 @@ public:
         while ((registers->cr & (1 << 31)) != 0);
         
         registers->cr &= ~(0b11 << 8);
-
-        switch (size){
-            case ProgramSize::Sixteen:   registers->cr |= (0b01 << 8); return;
-            case ProgramSize::ThirtyTwo: registers->cr |= (0b10 << 8); return;
-            case ProgramSize::SixtyFour: registers->cr |= (0b11 << 8); return;
-            default:        return;
-        }
+        registers->cr |= static_cast<uint8_t>(size) << 8;
     }
 
     /// @brief if you check documentation you can see

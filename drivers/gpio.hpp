@@ -86,8 +86,10 @@ public:
     }    
 
     void set_alt_function(uint8_t function_num){
-        if (function_num > 15) return;
+        constexpr uint8_t max_func = 16;
+
+        if (function_num >= max_func) return;
         if (num < 8) registers->afrl |= function_num << (num * 4);
-        else if (num < 16) registers->afrh |= function_num << ((num - 8) * 4);
+        else if (num < max_func) registers->afrh |= function_num << ((num - 8) * 4);
     }
 };    

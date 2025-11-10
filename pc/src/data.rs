@@ -37,7 +37,6 @@ impl Errors{
 pub struct MCUData{
     pub name: String,
     pub is_active: bool,
-    pub temperature: u8,
 }
 impl MCUData{
     pub fn new() -> Self {
@@ -49,7 +48,6 @@ impl MCUData{
         Self {
             name: name.trim().to_string(),
             is_active: false,
-            temperature: 0
         }
     }
 }

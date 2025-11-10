@@ -12,6 +12,8 @@
 #define STIR_BASE       0xE000EF00
 #define USART1_BASE     0x40011000
 #define MPU_BASE        0xE000ED90
+#define ADC_BASE        0x40012000
+#define ADC_CCR_BASE    ADC_BASE + 0x4
 
 typedef unsigned char uint8_t;
 typedef unsigned short uint16_t;

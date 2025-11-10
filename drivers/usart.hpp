@@ -6,7 +6,12 @@
 enum class DataBits{ Eight, Nine };
 enum class WakeTrigger{ Idle, Address_Mask };
 enum class Parity{ None, Even, Odd };
-enum class StopBits{ Half, One, OneAndHalf, Two };
+enum class StopBits: uint8_t{ 
+    Half        = 0b01, 
+    One         = 0b00, 
+    OneAndHalf  = 0b11, 
+    Two         = 0b10
+};
 typedef struct {
     volatile uint32_t sr;
     volatile uint32_t dr;
@@ -250,18 +255,7 @@ public:
     void set_stop_bits(StopBits stop_bits){
         usart_registers->cr2 &= ~(0b11 << 12);
 
-        switch (stop_bits) {
-        case StopBits::Half:
-            usart_registers->cr2 |= 1 << 12;
-            return;        
-        case StopBits::One:
-            return;
-        case StopBits::Two:
-            usart_registers->cr2 |= 0b10 << 12;
-            return;
-        case StopBits::OneAndHalf:
-            usart_registers->cr2 |= 0b11 << 12;
-        }
+        usart_registers->cr2 |= static_cast<uint8_t>(stop_bits);
     }
     
     void smatcard_enable(){
