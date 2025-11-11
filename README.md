@@ -1,7 +1,7 @@
 # Web_Controls_STM32
 
 DEMONSTRATION: (./demonstration.mp4)
-This project made to stmf401C
+This project made for stmf401C
 
 This project providing ability of programming your MCU
 in runtime using web interface and my own drivers
