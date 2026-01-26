@@ -24,6 +24,19 @@ SECTIONS{
         _edata = .;
     } > SRAM AT > FLASH
 
+
+    .queue : {
+        KEEP(*(.queue))
+    } > FLASH
+
+    .tasks_mem: {
+        . = ALIGN(4)
+        _stasks_mem = .;
+        KEEP(*(.tasks_mem))
+        . = ALIGN(4)
+        _etasks_mem = .;
+    } > FLASH
+
     .bss : {
         _sbss = .;
         *(.bss)

@@ -1,4 +1,3 @@
-CC = arm-none-eabi-gcc
 C++ = arm-none-eabi-g++
 OBJCOPY = arm-none-eabi-objcopy
 LD = arm-none-eabi-ld
@@ -16,7 +15,7 @@ blink.bin: blink.elf
 
 blink.elf: out_dir
 	$(C++) $(COMPILE_FLAGS) src/main.cpp -c -o out_dir/main.o 
-	$(CC) $(COMPILE_FLAGS) startup/startup.c -c -o out_dir/startup.o \
+	$(C++) $(COMPILE_FLAGS) startup/startup.c -c -o out_dir/startup.o \
 
 	$(LD) $(LINK_FLAGS) out_dir/main.o out_dir/startup.o -o out_dir/blink.elf
 

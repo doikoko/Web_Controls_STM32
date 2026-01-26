@@ -2,6 +2,9 @@
 
 #define KILOBYTE 1024
 
+#define MAX_QUEUE_MEMBERS   5
+#define MAX_MEM_SIZE        64
+
 #define RCC_BASE        0x40023800
 #define GPIO_BASE       0x40020000
 #define TIM_BASE        0x40000000
@@ -18,5 +21,6 @@
 typedef unsigned char uint8_t;
 typedef unsigned short uint16_t;
 typedef unsigned int uint32_t;
+typedef char int8_t;
 
 #define UINT32_T_MAX 0xFFFFFFFF

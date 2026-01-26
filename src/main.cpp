@@ -4,6 +4,7 @@
 #include "../drivers/systick.hpp"
 #include "../drivers/usart.hpp"
 #include "../drivers/user.hpp"
+#include "../drivers/async.hpp"
 
 uint8_t code[KILOBYTE * 8] __attribute__((section(".user_code")));
 
