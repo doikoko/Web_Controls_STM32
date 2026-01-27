@@ -64,6 +64,7 @@ public:
         while(((registers->cfgr >> 2) & 0b11) != 0b10);
     }    
 
+    /// @brief 7, 4, 336, 16
     uint8_t config_pll(uint8_t pllq, uint8_t pllp, uint32_t plln, uint16_t pllm){
         enable_hsi();
         diasble_pll();

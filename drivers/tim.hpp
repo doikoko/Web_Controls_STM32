@@ -2,7 +2,9 @@
 
 #include "data.hpp"    
 #include "rcc.hpp"
+#include "nvic.hpp"
 
+enum Direction{ UP, DOWN };
 typedef struct {
     volatile uint32_t cr1;
     volatile uint32_t cr2;
@@ -46,13 +48,14 @@ public:
         rcc.registers->apb1enr |= 1;
     }    
     
-private:    
     void stop(){
         registers->cr1 &= ~1;
     }    
     void start(){
         registers->cr1 |= 1;
     }    
+
+private:    
     void init(){
         registers->cr1 = 0;
         registers->cr2 = 0;

@@ -8,32 +8,40 @@
 
 uint8_t code[KILOBYTE * 8] __attribute__((section(".user_code")));
 
+void blink(){
+    
+}
+
 [[noreturn]]
 int main(){
-    RCC rcc;
-    TIM tim2 = { 2 };
 // Led - part of my development board
-    LED led = { 13, 'C' };
 // Button - part of my development board
-    Systick systick;
     Button button = { 0, 'A' };
-    USART usart = {9, 'A', 10, 'A' };
+    USART usart = { 9, 'A', 10, 'A' };
     User user(code);
 // init led
+    Systick systick;
+    RCC rcc;
+    
+    LED led = { 13, 'C' };
+    
+    rcc.config_pll(7, 4, 336, 16);
     led.clock_enable(rcc);
     led.set_output_mode();
     led.enable_push_pull();
     led.set_speed(GpioSpeed::Three);
     led.no_pull_up_down();
 
+    while(true){
+        led.blink();
+        systick.delay(1000);
+    }
+   // Queue::instance().spawn_task(blink);
     button.clock_enable(rcc);
     button.set_input_mode();
     button.set_speed(GpioSpeed::Three);
     button.set_pull_up();
-    
-    rcc.config_pll(7, 4, 336, 16);
-    tim2.clock_enable(rcc);
-    
+        
     usart.clear_data_reg();
     usart.clock_enable(rcc);
     
@@ -63,8 +71,6 @@ int main(){
     usart.rx_enable(); 
     usart.enable_usart(); 
     
-    led.disable_light();
-
     while(true){
         user.recv_code(usart);
         user.call();

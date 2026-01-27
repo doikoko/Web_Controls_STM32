@@ -6,7 +6,8 @@ COMPILE_FLAGS = -mcpu=cortex-m4 \
 	-mthumb -O2 -ffunction-sections \
 	-fdata-sections \
 	-fno-exceptions -fno-rtti \
-    -Wall -Wextra -mfloat-abi=hard -mfpu=fpv4-sp-d16 
+    -Wall -Wextra -mfloat-abi=hard -mfpu=fpv4-sp-d16 \
+	-Wno-char-subscripts
 LINK_FLAGS = -T mem.ld
 
 all: blink.bin pc.elf
@@ -15,7 +16,7 @@ blink.bin: blink.elf
 
 blink.elf: out_dir
 	$(C++) $(COMPILE_FLAGS) src/main.cpp -c -o out_dir/main.o 
-	$(C++) $(COMPILE_FLAGS) startup/startup.c -c -o out_dir/startup.o \
+	$(C++) $(COMPILE_FLAGS) startup/startup.cpp -c -o out_dir/startup.o \
 
 	$(LD) $(LINK_FLAGS) out_dir/main.o out_dir/startup.o -o out_dir/blink.elf
 
