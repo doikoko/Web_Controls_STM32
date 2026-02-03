@@ -3,8 +3,7 @@ OBJCOPY = arm-none-eabi-objcopy
 LD = arm-none-eabi-ld
 DRIVERS = ./drivers
 COMPILE_FLAGS = -mcpu=cortex-m4 \
-	-mthumb -O2 -ffunction-sections \
-	-fdata-sections \
+	-mthumb -O3 \
 	-fno-exceptions -fno-rtti \
     -Wall -Wextra -mfloat-abi=hard -mfpu=fpv4-sp-d16 \
 	-Wno-char-subscripts

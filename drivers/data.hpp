@@ -23,3 +23,28 @@ typedef unsigned short uint16_t;
 typedef unsigned int uint32_t;
 
 #define UINT32_T_MAX 0xFFFFFFFF
+
+#define LIGHT() {\
+    RCC rcc;\
+    LED led = { 13, 'C' };\
+    rcc.config_pll(7, 4, 336, 16);\
+    led.clock_enable(rcc);\
+    led.set_output_mode();\
+    led.enable_push_pull();\
+    led.set_speed(GpioSpeed::Three);\
+    led.no_pull_up_down();\
+}
+#define BLINK() {\
+    LED led = { 13, 'C' };\
+    led.blink();\
+}
+#define CONF() {\
+    RCC rcc;\
+    LED led = { 13, 'C' };\
+    rcc.config_pll(7, 4, 336, 16);\
+    led.clock_enable(rcc);\
+    led.set_output_mode();\
+    led.enable_push_pull();\
+    led.set_speed(GpioSpeed::Three);\
+    led.no_pull_up_down();\
+}

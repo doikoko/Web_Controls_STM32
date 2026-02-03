@@ -35,4 +35,16 @@ SECTIONS{
     .user_code : {
         *(.user_code)
     } > SRAM
+
+    . = ALIGN(4);
+    .queue : {
+        _squeue = .;
+        *(.queue)
+    } > SRAM
+
+    . = ALIGN(4);
+    .tasks_mem : {
+        *(.tasks_mem)
+        _etasks_mem = .;
+    } > SRAM
 }

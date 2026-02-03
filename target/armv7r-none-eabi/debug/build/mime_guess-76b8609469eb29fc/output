@@ -1,0 +1,1 @@
+cargo:rustc-env=MIME_TYPES_GENERATED_PATH=/home/doio/Projects/Web_Controls_STM32/target/armv7r-none-eabi/debug/build/mime_guess-76b8609469eb29fc/out/mime_types_generated.rs

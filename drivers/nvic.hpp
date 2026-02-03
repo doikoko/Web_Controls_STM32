@@ -38,7 +38,7 @@ public:
     
     uint8_t disable_interrupt(uint16_t num){
         if(num > (32 * 15)) return 1;
-        registers->icer[num / 32] = 1 << (num % 32);
+        registers->icer[num / 32] |= 1 << (num % 32);
 
         return 0;
     }

@@ -1,7 +1,6 @@
 #include "../drivers/async.hpp"
 #include "../drivers/dev_board_periphy.hpp"
 
-
 #define SRAM_START                  0x20000000U
 #define SRAM_SIZE                   64U * 1024U //64K
 #define SRAM_END                    SRAM_START + SRAM_SIZE
@@ -25,12 +24,14 @@ int main();
 
 // for async
 extern "C" void tim2_int_handle(){   
-    if (!Queue::instance().count) return;
+    BLINK();
+    if (!queue.count) return;
     
     for (uint8_t i = 0; i < MAX_QUEUE_MEMBERS; i++){
-        if(Queue::instance().processes[i]){
-            Queue::instance().processes[i]();
-            Queue::instance().count--;
+        if(queue.processes[i]){
+            queue.processes[i]();
+            queue.count--;
+            
             return;
         }
     }
@@ -55,35 +56,53 @@ __attribute__((section(".isr_vector"))) = {
     (uint32_t)&tim2_int_handle  
 };
 
-extern uint32_t _sdata, _edata, _sbss, _ebss, _etext;
+extern "C" uint32_t _sdata, _edata, _sbss, _ebss, _etext;
+extern "C" uint32_t _squeue, _etasks_mem;
+
+//extern "C" Queue queue; 
+//extern "C" TasksMemory tasks_mem; 
 
 // entry point
 extern "C" void reset_handler(){
     // zero bss
-    uint32_t* sdata = &_sdata; 
-    uint32_t* edata = &_edata; 
-    uint32_t* sbss = &_sbss; 
-    uint32_t* ebss = &_ebss;
-    uint32_t* etext = &_etext;
+    volatile uint32_t* sdata = &_sdata; 
+    volatile uint32_t* edata = &_edata; 
+    volatile uint32_t* sbss = &_sbss; 
+    volatile uint32_t* ebss = &_ebss;
+    volatile uint32_t* etext = &_etext;
     
-    uint32_t data_size = (uint32_t)edata - (uint32_t)sdata;
-    uint32_t bss_size = (uint32_t)ebss - (uint32_t)sbss;
+    volatile uint32_t* squeue = reinterpret_cast<uint32_t*>(&_squeue);
+    volatile uint32_t* etasks_mem = reinterpret_cast<uint32_t*>(&_etasks_mem);
+
+    volatile uint32_t data_size = 
+        reinterpret_cast<uint32_t>(edata) - reinterpret_cast<uint32_t>(sdata);
     
-    for(uint32_t i = 0; i < bss_size; i += sizeof(uint32_t)){
+    volatile uint32_t bss_size = 
+        reinterpret_cast<uint32_t>(ebss) - reinterpret_cast<uint32_t>(sbss);
+
+    volatile uint32_t queue_tasks_size = 
+        reinterpret_cast<uint32_t>(etasks_mem) - reinterpret_cast<uint32_t>(squeue);
+        
+    for(uint32_t i = 0; i < bss_size / sizeof(uint32_t); i++){
         *(sbss + i) = 0;
     }
     
     // copy data from FLASH to SRAM
-    for(uint32_t i = 0; i < data_size; i += sizeof(uint32_t)){
+    for(uint32_t i = 0; i < data_size / sizeof(uint32_t); i++){
         *(sdata + i) = *(etext + i);
     }
 
+    for(uint32_t i = 0; i < queue_tasks_size / sizeof(uint32_t); i++){
+        *(squeue + i) = 0;
+    }
+        
     RCC rcc;
     
     NVIC nvic;
     TIM tim2(2);
 
-    Queue::instance().spawn_task(reinterpret_cast<queue_func>(main));
-    Queue::init(3000000, nvic, tim2, rcc);
+    CONF();
+    
+    queue.spawn_task(reinterpret_cast<queue_func>(main));
+    queue.init(1000, nvic, tim2, rcc);
 }
-

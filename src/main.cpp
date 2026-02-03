@@ -8,8 +8,21 @@
 
 uint8_t code[KILOBYTE * 8] __attribute__((section(".user_code")));
 
-void blink(){
+Systick systick;
+RCC rcc;
+LED led = { 13, 'C' };
     
+void blink(){
+    rcc.config_pll(7, 4, 336, 16);
+    led.clock_enable(rcc);
+    led.set_output_mode();
+    led.enable_push_pull();
+    led.set_speed(GpioSpeed::Three);
+    led.no_pull_up_down();
+
+    led.enable_light();
+    //while(true){
+    //}
 }
 
 [[noreturn]]
@@ -20,23 +33,10 @@ int main(){
     USART usart = { 9, 'A', 10, 'A' };
     User user(code);
 // init led
-    Systick systick;
-    RCC rcc;
     
-    LED led = { 13, 'C' };
+    //LIGHT();
+    //queue.spawn_task(blink);
     
-    rcc.config_pll(7, 4, 336, 16);
-    led.clock_enable(rcc);
-    led.set_output_mode();
-    led.enable_push_pull();
-    led.set_speed(GpioSpeed::Three);
-    led.no_pull_up_down();
-
-    while(true){
-        led.blink();
-        systick.delay(1000);
-    }
-   // Queue::instance().spawn_task(blink);
     button.clock_enable(rcc);
     button.set_input_mode();
     button.set_speed(GpioSpeed::Three);

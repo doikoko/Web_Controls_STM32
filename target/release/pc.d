@@ -1,0 +1,1 @@
+/home/doio/Projects/Web_Controls_STM32/target/release/pc: /home/doio/Projects/Web_Controls_STM32/pc/src/data.rs /home/doio/Projects/Web_Controls_STM32/pc/src/files.rs /home/doio/Projects/Web_Controls_STM32/pc/src/main.rs /home/doio/Projects/Web_Controls_STM32/pc/src/server.rs /home/doio/Projects/Web_Controls_STM32/pc/src/usart.rs

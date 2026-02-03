@@ -1,0 +1,1 @@
+{"rustc":18055622552850914451,"features":"","declared_features":"","target":0,"profile":0,"path":0,"deps":[[13548984313718623784,"build_script_build",false,10540836814461047097]],"local":[{"RerunIfChanged":{"output":"armv7r-none-eabi/debug/build/serde-0c08b90dc2a2bdef/output","paths":["build.rs"]}}],"rustflags":[],"config":0,"compile_kind":0}
